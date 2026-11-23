@@ -17,7 +17,7 @@ DEFAULT_NEGATIVE = (
     "gore, blood, nudity, child-unsafe"
 )
 
-HF_API_URL = "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell"
+HF_API_URL = "https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell"
 
 def full_visual_prompt(scene: str, style_suffix: str | None = None) -> str:
     return f"{scene.strip()}{(style_suffix or STYLE_SUFFIX)}"
