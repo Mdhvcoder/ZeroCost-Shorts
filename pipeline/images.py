@@ -1,8 +1,7 @@
-"""Free image generation using Pollinations.ai with retries."""
+"""Free image generation using AI Horde (anonymous, no API key)."""
 from __future__ import annotations
 
 import time
-import urllib.parse
 from pathlib import Path
 
 import requests
@@ -17,6 +16,9 @@ DEFAULT_NEGATIVE = (
     "gore, blood, nudity, child-unsafe"
 )
 
+HORDE_API = "https://aihorde.net/api/v2/generate/async"
+HORDE_STATUS = "https://aihorde.net/api/v2/generate/status"
+
 def full_visual_prompt(scene: str, style_suffix: str | None = None) -> str:
     return f"{scene.strip()}{(style_suffix or STYLE_SUFFIX)}"
 
@@ -25,35 +27,48 @@ def save_scene_image(
     prompt: str,
     out_path: Path,
     *,
-    width: int = 1024,
-    height: int = 1024,
+    width: int = 512,
+    height: int = 512,
     negative: str = DEFAULT_NEGATIVE,
 ) -> tuple[str, str]:
-    """Generate and save one image using Pollinations with retries."""
+    """Generate one image via AI Horde (anonymous)."""
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
-    full_prompt = prompt + STYLE_SUFFIX
-    encoded = urllib.parse.quote(full_prompt)
-    url = (
-        f"https://image.pollinations.ai/prompt/{encoded}"
-        f"?width={width}&height={height}&nologo=true&model=flux&seed={int(time.time()) + index}"
-    )
+    headers = {"apikey": "0000000000", "Client-Agent": "ZeroCostShorts:1.0"}
+    payload = {
+        "prompt": prompt + STYLE_SUFFIX,
+        "params": {
+            "width": width,
+            "height": height,
+            "steps": 20,
+            "n": 1
+        },
+        "nsfw": False,
+        "models": ["stable_diffusion"]
+    }
 
-    for attempt in range(1, 4):
-        try:
-            print(f"      Generating image {index} via Pollinations (attempt {attempt})...")
-            resp = requests.get(url, timeout=90)
-            if resp.status_code == 402:
-                print(f"      Rate limited, waiting 30s...")
-                time.sleep(30)
-                continue
-            resp.raise_for_status()
-            out_path.write_bytes(resp.content)
-            print(f"      Image {index} saved")
-            return "ok", "pollinations"
-        except Exception as e:
-            if attempt == 3:
-                return "fail", str(e)
-            time.sleep(10)
-    return "fail", "max retries exceeded"
+    try:
+        print(f"      Submitting image {index} to AI Horde...")
+        resp = requests.post(HORDE_API, json=payload, headers=headers, timeout=30)
+        resp.raise_for_status()
+        job_id = resp.json()["id"]
+
+        # Poll for result
+        for _ in range(40):
+            time.sleep(6)
+            status = requests.get(f"{HORDE_STATUS}/{job_id}", headers=headers, timeout=30)
+            status.raise_for_status()
+            data = status.json()
+            if data.get("done"):
+                img_url = data["generations"][0]["img"]
+                img = requests.get(img_url, timeout=60)
+                img.raise_for_status()
+                out_path.write_bytes(img.content)
+                print(f"      Image {index} saved")
+                return "ok", "aihorde"
+            if data.get("faulted"):
+                return "fail", "AI Horde faulted"
+        return "fail", "AI Horde timeout"
+    except Exception as e:
+        return "fail", str(e)
