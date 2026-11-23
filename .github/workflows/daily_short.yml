@@ -17,10 +17,9 @@ on:
 
 env:
   GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-  DEAPI_TOKEN: ${{ secrets.DEAPI_TOKEN }}
-  YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
-  YT_CLIENT_SECRET_VALUE: ${{ secrets.YT_CLIENT_SECRET_VALUE }}
-  YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+  HF_TOKEN: ${{ secrets.HF_TOKEN }}
+  YOUTUBE_TOKEN_B64: ${{ secrets.YOUTUBE_TOKEN_B64 }}
+  YOUTUBE_CLIENT_SECRETS: ${{ secrets.YOUTUBE_CLIENT_SECRETS }}
   EDGE_TTS_VOICE: "en-US-ChristopherNeural"
 
 jobs:
