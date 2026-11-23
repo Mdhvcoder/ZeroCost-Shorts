@@ -21,6 +21,8 @@ env:
   YOUTUBE_TOKEN_B64: ${{ secrets.YOUTUBE_TOKEN_B64 }}
   YOUTUBE_CLIENT_SECRETS: ${{ secrets.YOUTUBE_CLIENT_SECRETS }}
   EDGE_TTS_VOICE: "en-US-ChristopherNeural"
+  PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+  
 
 jobs:
   generate-and-upload:
