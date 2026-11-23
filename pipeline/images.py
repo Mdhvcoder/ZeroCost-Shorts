@@ -12,6 +12,11 @@ STYLE_SUFFIX = (
     "professional youtube visual quality, no text, no captions, no watermark, no logos"
 )
 
+DEFAULT_NEGATIVE = (
+    "blurry, low quality, watermark, logo, text, title, signature, ugly, grainy, "
+    "gore, blood, nudity, child-unsafe"
+)
+
 HF_API_URL = "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell"
 
 def full_visual_prompt(scene: str, style_suffix: str | None = None) -> str:
@@ -24,7 +29,7 @@ def save_scene_image(
     *,
     width: int = 1024,
     height: int = 1024,
-    negative: str = "",
+    negative: str = DEFAULT_NEGATIVE,
 ) -> tuple[str, str]:
     """Generate and save one image using Hugging Face. Returns (status, detail)."""
     out_path = Path(out_path)
@@ -41,7 +46,6 @@ def save_scene_image(
         print(f"      Generating image {index} via Hugging Face...")
         resp = requests.post(HF_API_URL, headers=headers, json=payload, timeout=120)
         if resp.status_code == 503:
-            # Model is loading
             time.sleep(20)
             resp = requests.post(HF_API_URL, headers=headers, json=payload, timeout=120)
         resp.raise_for_status()
